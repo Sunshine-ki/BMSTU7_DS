@@ -11,7 +11,7 @@ gcc -shared -o libgeneral.so general.o -ldl
 gcc main.o -ldl -o run -L. -lgeneral -Wl,-rpath,.
 */
 
-void get_mac_address(char unique_id[LEN_UNIQUE_ID])
+void get_machine_id(char unique_id[LEN_UNIQUE_ID])
 {
 	FILE *f = fopen(PATH_TO_MACHINE_ID, MODE_READ);
 	fscanf(f, "%s", unique_id);
@@ -23,7 +23,7 @@ void create_c_file()
 	FILE *f = fopen(PROGRAM_FILE_NAME, MODE_WRITE);
 
 	char unique_id[LEN_UNIQUE_ID];
-	get_mac_address(unique_id);
+	get_machine_id(unique_id);
 
 	fprintf(f, "%s", BEGIN_STRING);
 	fprintf(f, "%s", unique_id);
