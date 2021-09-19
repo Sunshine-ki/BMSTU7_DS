@@ -38,7 +38,7 @@ int main()
   printf("Access is denied");						
 }	
 ```
-installer вшивает в запуск программы ваш YOUR_MACHINE_ID и сравнивает его с machine-id машины на которой запускается основная программа.(Если используете machine-id хотя бы чуть-чуть нужно почитать https://man7.org/linux/man-pages/man5/machine-id.5.html)
+installer вшивает в запуск программы ваш YOUR_MACHINE_ID и сравнивает его с machine-id машины на которой запускается основная программа (если используете machine-id хотя бы чуть-чуть нужно почитать https://man7.org/linux/man-pages/man5/machine-id.5.html).
 
 3. Далее данный файл компилируется (и удаляется исходный сгенерированный си файл.
 
