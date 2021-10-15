@@ -6,3 +6,6 @@
 /lab_03/Testing/obj
 /lab_03/.vs/des
 /lab_03/des/.vs/des/v16
+/lab_03/des/.vs/*
+.vs/*
+*/.vs/*
