@@ -7,7 +7,7 @@ namespace des
 {
     public static class Constants
     {
-        private static readonly string _directory = @"C:\Users\ASukocheva\Desktop\bmstu\DS\lab_03\des\des\data";
+        private static readonly string _directory = @"C:\Users\ASukocheva\source\repos\BMSTU7_DS\lab_03\des\des\data\";
 
         // For key
         public static List<int> C0;

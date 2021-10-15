@@ -7,16 +7,16 @@ namespace des
 {
     public static class Writer
     {
-        public static void Write(List<List<bool>> blocks, string path, int addCount)
+        public static void Write(List<List<bool>> blocks, string path, int? addCount = null)
         {
             FileStream writer = File.OpenWrite(path);
 
             int max = 8;
             for (int k = 0; k < blocks.Count; k++)
             {
-                if (k == blocks.Count - 1 && addCount > 0)
+                if (addCount != null && k == blocks.Count - 1 && addCount > 0)
                 {
-                    max = (64 - addCount) / 8;
+                    max = (64 - (int)addCount) / 8;
                     //Console.WriteLine($"max = {max}, addCount = {addCount}");
                 }
                 for (int i = 0; i < max; i++)
@@ -30,6 +30,5 @@ namespace des
 
             writer.Close();
         }
-
     }
 }

@@ -43,10 +43,13 @@ namespace des
                 encryptedBlocks.Add(DataOperations.Encrypt(block, keys));
             }
 
-            Writer.Write(encryptedBlocks, pathToEncryptedFile, addCount);
+            Writer.Write(encryptedBlocks, pathToEncryptedFile);
 
-            List<List<bool>> beginData = new List<List<bool>>();
-            foreach (var block in encryptedBlocks)
+            int addCount2 = 0;
+            var encryptedBlocksFromFile = Reader.Read(pathToEncryptedFile, ref addCount2);
+            var beginData = new List<List<bool>>();
+
+            foreach (var block in encryptedBlocksFromFile)
             {
                 beginData.Add(DataOperations.Decrypt(block, keys));
             }
