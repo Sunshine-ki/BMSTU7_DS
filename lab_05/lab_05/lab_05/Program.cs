@@ -9,8 +9,9 @@ namespace lab_05
     {
         static string pathToPublicKey = @"C:\Users\ASukocheva\source\repos\BMSTU7_DS\lab_05\lab_05\lab_05\keys\public_key.txt";
         static string pathToPrivateKey = @"C:\Users\ASukocheva\source\repos\BMSTU7_DS\lab_05\lab_05\lab_05\keys\private_key.txt";
-        static string pathToData = @"C:\Users\ASukocheva\source\repos\BMSTU7_DS\lab_05\lab_05\lab_05\data\Redhead_Cat.jpg";
+        static string pathToData = @"C:\Users\ASukocheva\source\repos\BMSTU7_DS\lab_05\lab_05\lab_05\data\test.txt";
         static string pathToSigned = @"C:\Users\ASukocheva\source\repos\BMSTU7_DS\lab_05\lab_05\lab_05\data\signed";
+
 
         private static byte[] readDataFromFile(string path)
         {
@@ -30,7 +31,9 @@ namespace lab_05
 
         private static byte[] getHash(byte[] fileData)
         {
-            using var sha256 = SHA256.Create();
+            HashAlgorithm sha256 = HashAlgorithm.Create("SHA256");
+
+            //using var sha256 = SHA256.Create();
             var hashValue = sha256.ComputeHash(fileData);
             
             return hashValue;
@@ -76,9 +79,17 @@ namespace lab_05
 
             var privateKey = GetPrivateKey();
             rsa.FromXmlString(privateKey);
-            var data = rsa.Encrypt(hashValue, false); // Второй параметр что-то для windows xp, нас не интересует....
-            
-            return data;
+            //var data = rsa.Encrypt(hashValue, false); // Второй параметр что-то для windows xp, нас не интересует....
+
+            RSAPKCS1SignatureFormatter RSAFormatter = new RSAPKCS1SignatureFormatter(rsa);
+
+            //Set the hash algorithm to SHA256.
+            RSAFormatter.SetHashAlgorithm("SHA256");
+
+            //Create a signature for HashValue and return it.
+            byte[] SignedHash = RSAFormatter.CreateSignature(hashValue);
+
+            return SignedHash;
         }
 
         private static bool CheckSigned()
@@ -88,10 +99,19 @@ namespace lab_05
             rsa.FromXmlString(publicKey);
 
             var signed = readDataFromFile(pathToSigned);
-            var signedHash = rsa.Decrypt(signed, false);
+            //var signedHash = rsa.Decrypt(signed, false);
             var fileHash = getHashFromFile(pathToData);
 
-            return signedHash.SequenceEqual(fileHash);
+            RSAPKCS1SignatureDeformatter RSADeformatter = new RSAPKCS1SignatureDeformatter(rsa);
+            RSADeformatter.SetHashAlgorithm("SHA256");
+            //Verify the hash and display the results to the console. 
+            if (RSADeformatter.VerifySignature(fileHash, signed))
+            {
+                Console.WriteLine("The signature was verified.");
+            }
+
+            //return signedHash.SequenceEqual(fileHash);
+            return true;
         }
 
 
@@ -100,8 +120,8 @@ namespace lab_05
             //GenerateKeys();
 
             // Создание подписи
-            //var signed = CreateSigned();
-            //writeDataToFile(pathToSigned, signed);
+            var signed = CreateSigned();
+            writeDataToFile(pathToSigned, signed);
 
             Console.WriteLine(CheckSigned());
 
