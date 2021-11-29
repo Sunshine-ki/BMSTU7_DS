@@ -34,5 +34,13 @@ namespace lab_06
 
             return result;
         }
+
+        public static List<bool> ConvertIntToBitArray(int number, int lenght)
+        {
+            var numberBitArray = System.Convert.ToString(number, 2).PadLeft(lenght, '0').Select(bit => bit == '1').ToList();
+            var numberByteArray = ConvertListBoolToListByte(numberBitArray);
+
+            return numberBitArray;
+        }
     }
 }

@@ -94,5 +94,75 @@ namespace lab_06
 
             return result;
         }
+
+        // Return size in bit
+        public int GetMetaSize(Dictionary<byte, List<bool>> substitutions)
+        {
+            int size = 0; // 32 bit
+
+            // Длина каждого заменяемого кода.
+            substitutions.ForEach(sub =>  { size += sub.Value.Count; });
+
+            // 2 байта под каждую замену.
+            // 1ый байт - [0-255] какой символ
+            // 2ой байт - [0-255] размер заменяемого кода
+            size += 2 * substitutions.Count * 8;
+
+            return size;
+        }
+
+        public List<bool> CreateMeta(Dictionary<byte, List<bool>> substitutions)
+        {
+            var result = new List<bool>();
+
+            var metaSize = GetMetaSize(substitutions);
+            result.AddRange(Converter.ConvertIntToBitArray(metaSize, 32));
+
+            foreach (var sub in substitutions)
+            {
+                result.AddRange(Converter.ConvertIntToBitArray(sub.Key, 8));
+                result.AddRange(Converter.ConvertIntToBitArray(sub.Value.Count, 8));
+                result.AddRange(sub.Value);
+            }
+
+            while (result.Count % 8 != 0)
+            {
+                result.Add(false);
+            }
+
+            return result;
+        }
+
+        public Dictionary<byte, List<bool>> ConvertListBitToSubstitutions(List<bool> data)
+        {
+            var result = new Dictionary<byte, List<bool>>();
+            List<bool> currentCode = new List<bool>();
+
+            int metaSize = Converter.ConvertListBoolToInt(data.Take(32).ToList());
+            Console.WriteLine($"[ConvertListBitToSubstitutions] metaSize = {metaSize}");
+
+
+            var realData = data.Skip(32).Take(metaSize).ToList();
+
+            for (int i = 0; i < realData.Count;)
+            {
+                var symbol = Converter.ConvertListBoolToInt(realData.Skip(i).Take(8).ToList());
+                i += 8;
+
+                var codeSize = Converter.ConvertListBoolToInt(realData.Skip(i).Take(8).ToList());
+                i += 8;
+
+                for(int j = 0; j < codeSize; j++)
+                {
+                    currentCode.Add(realData[i]);
+                    i++;
+                }
+
+                result.Add((byte)symbol, currentCode.GetRange(0, currentCode.Count));
+                currentCode.Clear();
+            }
+
+            return result;
+        }
     }
 }

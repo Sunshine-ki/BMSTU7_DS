@@ -8,7 +8,7 @@ namespace lab_06
 {
     public static class Writer
     {
-        // data НЕ должна быть кратна 8. В конце запишутся нолики.
+        // Если data не кратна 8, то в конце запишутся нолики.
         public static void WriteBoolArrayToFile(List<bool> data, string path)
         {
             if (File.Exists(path)) File.Delete(path);
@@ -34,7 +34,6 @@ namespace lab_06
                 var currentByte = Converter.ConvertListBoolToInt(data.Skip(max).Take(data.Count % 8).ToList());
                 writer.WriteByte((byte)currentByte);
             }
-
         }
     }
 }
