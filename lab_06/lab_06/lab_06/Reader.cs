@@ -17,8 +17,12 @@ namespace lab_06
             while ((elem = stream.ReadByte()) > -1)
             {
                 byte b = (byte)elem;
-                result.AddRange(Convert.ToString(b, 2).PadLeft(8, '0').Select(bit => bit == '1').ToList());
+                var tmp = Convert.ToString(b, 2).PadLeft(8, '0').Select(bit => bit == '1').ToList();
+                //Console.WriteLine("")
+                result.AddRange(tmp);
             }
+
+            Console.WriteLine($"[ReadFileToBoolArray] Count readed = {result.Count}\n");
 
             return result;
         }
