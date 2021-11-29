@@ -95,6 +95,8 @@ namespace lab_06
             return result;
         }
 
+        // TODO: method for compress and decompress
+
         // Return size in bit
         public int GetMetaSize(Dictionary<byte, List<bool>> substitutions)
         {
@@ -160,6 +162,29 @@ namespace lab_06
 
                 result.Add((byte)symbol, currentCode.GetRange(0, currentCode.Count));
                 currentCode.Clear();
+            }
+
+            return result;
+        }
+
+        public List<byte> Decompress(Dictionary<byte, List<bool>> substitutions, List<bool> data)
+        {
+            var result = new List<byte>();
+            var currentCode = new List<bool>();
+            byte currentSymbol;
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                currentCode.Add(data[i]);
+                foreach(var sub in substitutions)
+                {
+                    if (sub.Value.SequenceEqual(currentCode))
+                    {
+                        currentSymbol = sub.Key;
+                        result.Add(currentSymbol);
+                        currentCode.Clear();
+                    }
+                }
             }
 
             return result;

@@ -76,6 +76,10 @@ namespace lab_06
             }
             Console.WriteLine("__________");
 
+            var decompressedData = huffman.Decompress(readSubstitutions, compressedData);
+            Writer.WriteByteArrayToFile(decompressedData, Constants.PathToNewDecompressData);
+
+
             //Writer.WriteBoolArrayToFile(dataBit, Constants.PathToNewData);
         }
 
@@ -83,5 +87,7 @@ namespace lab_06
         {
             Run();
         }
+
+
     }
 }

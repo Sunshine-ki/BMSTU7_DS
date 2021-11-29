@@ -18,7 +18,6 @@ namespace lab_06
             {
                 byte b = (byte)elem;
                 var tmp = Convert.ToString(b, 2).PadLeft(8, '0').Select(bit => bit == '1').ToList();
-                //Console.WriteLine("")
                 result.AddRange(tmp);
             }
 

@@ -35,5 +35,13 @@ namespace lab_06
                 writer.WriteByte((byte)currentByte);
             }
         }
+
+        public static void WriteByteArrayToFile(List<byte> data, string path)
+        {
+            if (File.Exists(path)) File.Delete(path);
+
+            using var writer = File.OpenWrite(path);
+            data.ForEach(elem => { writer.WriteByte(elem); });
+        }
     }
 }
