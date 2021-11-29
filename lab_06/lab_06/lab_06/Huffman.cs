@@ -17,7 +17,7 @@ namespace lab_06
             {
                 if (!result.ContainsKey(elem))
                 {
-                    result.Add(elem, result.Count(x => x.Equals(elem)));
+                    result.Add(elem, data.Count(x => x.Equals(elem)));
                 }
             }
 
