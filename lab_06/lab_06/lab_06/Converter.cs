@@ -23,7 +23,6 @@ namespace lab_06
         public static int ConvertListBoolToInt(List<bool> data)
         {
             int result = 0;
-
             for (int i = data.Count - 1, k = 0; i >= 0; i--, k++)
             {
                 if (data[i])

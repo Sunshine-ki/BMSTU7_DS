@@ -19,7 +19,7 @@ namespace lab_06
             {
                 flag = true;
                 max = data.Count / 8 * 8;
-                Console.WriteLine($"[WriteCompressedData] data.Count % 8  ({data.Count}) != 0");
+                //Console.WriteLine($"[WriteCompressedData] data.Count % 8  ({data.Count}) != 0");
             }
 
             using var writer = File.OpenWrite(path);
@@ -31,7 +31,15 @@ namespace lab_06
 
             if (flag)
             {
-                var currentByte = Converter.ConvertListBoolToInt(data.Skip(max).Take(data.Count % 8).ToList());
+                var t = data.Skip(max).Take(data.Count % 8).ToList();
+                var p = 8 - data.Count % 8;
+                for (int i = 0; i < p; i++)
+                {
+                    t.Add(false);
+                }
+
+                var currentByte = Converter.ConvertListBoolToInt(t);
+
                 writer.WriteByte((byte)currentByte);
             }
         }

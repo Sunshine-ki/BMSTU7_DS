@@ -10,84 +10,46 @@ namespace lab_06
     {
         static void Run()
         {
-            var huffman = new Huffman();
+            Console.WriteLine("1 - compress; 2 - decompress");
+            var answer = Convert.ToInt32(Console.ReadLine());
 
-            var dataBit = Reader.ReadFileToBoolArray(Constants.PathToData);
-            var dataByte = Converter.ConvertListBoolToListByte(dataBit);
-            var weights = huffman.CreateWeights(dataByte);
+            Console.WriteLine("Хотите получить доп. информацию? 0 - нет; 1 - да\n");
+            var info = Convert.ToBoolean(Convert.ToInt32(Console.ReadLine()));
 
-            foreach (var elem in weights.OrderBy(w => w.Value))
+
+            if (answer == 1)
             {
-                Console.WriteLine(string.Format("{0, 6} = {1,6}", elem.Key, elem.Value));
-            }
+                // TODO: ReadFileIntoByteArray??? and not problem
+                var dataBit = Reader.ReadFileIntoBoolArray(Constants.PathToData);
+                var dataByte = Converter.ConvertListBoolToListByte(dataBit);
+                // TODO: param for output all substitutions
+                var compressedData = Huffman.Compress(dataByte, out int min, out int max);
 
-            var tree = huffman.CreateTree(weights);
-
-            var substitutions = huffman.CreateSubstitutions(tree);
-
-            Console.Write("\n");
-            var min = substitutions.ElementAt(0).Value.Count;
-            var max = substitutions.ElementAt(0).Value.Count;
-            
-            Console.WriteLine($"Изначальные метаданные кол-во = {substitutions.Count}");
-            foreach (var elem in substitutions.OrderBy(e => e.Value.Count))
-            {
-                Console.Write($"{elem.Key} ");
-                
-                if (elem.Value.Count < min) min = elem.Value.Count;
-                if (elem.Value.Count > max) max = elem.Value.Count;
-
-                foreach (var b in elem.Value)
-                {
-                    Console.Write(b ? 1 : 0);
-                }
                 Console.Write("\n");
+                Console.WriteLine($"Прочитанное кол-во бит = {dataBit.Count} байт = {dataByte.Count}");
+                Console.WriteLine($"Минимальная длина заменяемого кода (Min) = {min}");
+                Console.WriteLine($"Максимальная длина заменяемого кода (Max) = {max}");
+                Console.WriteLine($"Сжатые данные. Кол-во бит = {compressedData.Count} байт = {compressedData.Count / 8}");
             }
-            Console.WriteLine("__________");
-
-            Console.WriteLine($"\n Min = {min} Max = {max} res.count = {substitutions.Count}");
-
-            var compressedData = huffman.Replace(dataByte, substitutions);
-            Writer.WriteBoolArrayToFile(compressedData, Constants.PathToNewData);
-
-            Console.WriteLine($"dataBit.Count = {dataBit.Count} (begin size)");
-            Console.WriteLine($"GetMetaSize for substitutions = {huffman.GetMetaSize(substitutions)}");
-
-
-            var metaArrBit = huffman.CreateMeta(substitutions);
-            Writer.WriteBoolArrayToFile(metaArrBit, Constants.PathToNewMeta);
-
-            var readMeta = Reader.ReadFileToBoolArray(Constants.PathToNewMeta);
-            var readSubstitutions = huffman.ConvertListBitToSubstitutions(readMeta);
-
-            Console.WriteLine($"Считанные метаданные кол-во = {readSubstitutions.Count}");
-            foreach (var elem in readSubstitutions.OrderBy(e => e.Value.Count))
+            else if (answer == 2)
             {
-                Console.Write($"{elem.Key} ");
+                var compressedData = Reader.ReadFileIntoBoolArray(Constants.PathToCompressedData);
 
-                if (elem.Value.Count < min) min = elem.Value.Count;
-                if (elem.Value.Count > max) max = elem.Value.Count;
+                var readMeta = Reader.ReadFileIntoBoolArray(Constants.PathToMeta);
+                int dataSize = 0;
+                var readSubstitutions = Metadata.GetSustitutionsFromBitList(readMeta, ref dataSize);
 
-                foreach (var b in elem.Value)
-                {
-                    Console.Write(b ? 1 : 0);
-                }
-                Console.Write("\n");
+                Console.WriteLine($"Считанные метаданные кол-во = {readSubstitutions.Count} бит {readSubstitutions.Count / 8} байт");
+                if (info) Huffman.PrintSubstitutions(readSubstitutions);
+
+                var decompressedData = Huffman.Decompress(readSubstitutions, compressedData.Take(dataSize).ToList());
+                Writer.WriteByteArrayToFile(decompressedData, Constants.PathToDecompressedData);
             }
-            Console.WriteLine("__________");
-
-            var decompressedData = huffman.Decompress(readSubstitutions, compressedData);
-            Writer.WriteByteArrayToFile(decompressedData, Constants.PathToNewDecompressData);
-
-
-            //Writer.WriteBoolArrayToFile(dataBit, Constants.PathToNewData);
         }
 
         static void Main(string[] args)
         {
             Run();
         }
-
-
     }
 }

@@ -1,15 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using MoreLinq;
 
 namespace lab_06
 {
-    public class Huffman
+    public static class Huffman
     {
-        public Dictionary<byte, int> CreateWeights(List<byte> data)
+        public static List<bool> Compress(List<byte> dataByte, out int min, out int max)
+        {
+            var weights = createWeights(dataByte);
+
+            var tree = createTree(weights);
+
+            var substitutions = createSubstitutions(tree);
+            
+            min = substitutions.Select(x => x.Value.Count).Min();
+            max = substitutions.Select(x => x.Value.Count).Max();
+
+            var compressedData = replace(dataByte, substitutions);
+
+            var dataSize = compressedData.Count; // bit
+            var metaArrBit = Metadata.Create(substitutions, dataSize);
+            Writer.WriteBoolArrayToFile(metaArrBit, Constants.PathToMeta);
+
+            Console.WriteLine($"Metadata size for substitutions = {Metadata.GetMetaSize(substitutions)} (without the first int!)");
+
+            Writer.WriteBoolArrayToFile(compressedData, Constants.PathToCompressedData);
+
+            return compressedData;
+        }
+
+        #region Compress
+        private static Dictionary<byte, int> createWeights(List<byte> data)
         {
             var weights = new Dictionary<byte, int>();
 
@@ -24,7 +47,7 @@ namespace lab_06
             return weights;
         }
 
-        public Tree CreateTree(Dictionary<byte, int> weights)
+        private static Tree createTree(Dictionary<byte, int> weights)
         {
             var result = new List<Tree>();
 
@@ -43,26 +66,26 @@ namespace lab_06
                 result.Add(new Tree(firstMin.Data.Value + secondMin.Data.Value, firstMin, secondMin));
             }
 
-            return result[0];
+            return result.FirstOrDefault();
         }
 
-        public Dictionary<byte, List<bool>> CreateSubstitutions(Tree tree)
+        private static Dictionary<byte, List<bool>> createSubstitutions(Tree tree)
         {
             var result = new Dictionary<byte, List<bool>>();
             var currentByte = new List<bool>();
 
-            createSubstitutions(tree, currentByte, result);
+            createSubstitutionsRec(tree, currentByte, result);
 
             return result;
         }
 
-        private void createSubstitutions(Tree tree, List<bool> currentByte, Dictionary<byte, List<bool>> result)
+        private static void createSubstitutionsRec(Tree tree, List<bool> currentByte, Dictionary<byte, List<bool>> result)
         {
             if (tree.Left is null && tree.Right is null)
             {
                 var b = currentByte.GetRange(0, currentByte.Count);
 
-                if (tree.Data.Key is null) throw new Exception("[createSubstitutions] tree.Data.Key is null");
+                if (tree.Data.Key is null) throw new Exception("[createSubstitutionsRec] tree.Data.Key is null");
                 result.Add((byte)tree.Data.Key, b);
 
                 return;
@@ -71,19 +94,19 @@ namespace lab_06
             if (tree.Left != null)
             {
                 currentByte.Add(false);
-                createSubstitutions(tree.Left, currentByte, result);
+                createSubstitutionsRec(tree.Left, currentByte, result);
                 currentByte.RemoveAt(currentByte.Count - 1);
             }
 
             if (tree.Right != null)
             {
                 currentByte.Add(true);
-                createSubstitutions(tree.Right, currentByte, result);
+                createSubstitutionsRec(tree.Right, currentByte, result);
                 currentByte.RemoveAt(currentByte.Count - 1);
             }
         }
 
-        public List<bool> Replace(List<byte> data, Dictionary<byte, List<bool>> substitutions)
+        private static List<bool> replace(List<byte> data, Dictionary<byte, List<bool>> substitutions)
         {
             var result = new List<bool>();
 
@@ -94,100 +117,72 @@ namespace lab_06
 
             return result;
         }
+        #endregion
 
-        // TODO: method for compress and decompress
-
-        // Return size in bit
-        public int GetMetaSize(Dictionary<byte, List<bool>> substitutions)
-        {
-            int size = 0; // 32 bit
-
-            // Длина каждого заменяемого кода.
-            substitutions.ForEach(sub =>  { size += sub.Value.Count; });
-
-            // 2 байта под каждую замену.
-            // 1ый байт - [0-255] какой символ
-            // 2ой байт - [0-255] размер заменяемого кода
-            size += 2 * substitutions.Count * 8;
-
-            return size;
-        }
-
-        public List<bool> CreateMeta(Dictionary<byte, List<bool>> substitutions)
-        {
-            var result = new List<bool>();
-
-            var metaSize = GetMetaSize(substitutions);
-            result.AddRange(Converter.ConvertIntToBitArray(metaSize, 32));
-
-            foreach (var sub in substitutions)
-            {
-                result.AddRange(Converter.ConvertIntToBitArray(sub.Key, 8));
-                result.AddRange(Converter.ConvertIntToBitArray(sub.Value.Count, 8));
-                result.AddRange(sub.Value);
-            }
-
-            while (result.Count % 8 != 0)
-            {
-                result.Add(false);
-            }
-
-            return result;
-        }
-
-        public Dictionary<byte, List<bool>> ConvertListBitToSubstitutions(List<bool> data)
-        {
-            var result = new Dictionary<byte, List<bool>>();
-            List<bool> currentCode = new List<bool>();
-
-            int metaSize = Converter.ConvertListBoolToInt(data.Take(32).ToList());
-            Console.WriteLine($"[ConvertListBitToSubstitutions] metaSize = {metaSize}");
-
-
-            var realData = data.Skip(32).Take(metaSize).ToList();
-
-            for (int i = 0; i < realData.Count;)
-            {
-                var symbol = Converter.ConvertListBoolToInt(realData.Skip(i).Take(8).ToList());
-                i += 8;
-
-                var codeSize = Converter.ConvertListBoolToInt(realData.Skip(i).Take(8).ToList());
-                i += 8;
-
-                for(int j = 0; j < codeSize; j++)
-                {
-                    currentCode.Add(realData[i]);
-                    i++;
-                }
-
-                result.Add((byte)symbol, currentCode.GetRange(0, currentCode.Count));
-                currentCode.Clear();
-            }
-
-            return result;
-        }
-
-        public List<byte> Decompress(Dictionary<byte, List<bool>> substitutions, List<bool> data)
+        public static List<byte> Decompress(Dictionary<byte, List<bool>> substitutions, List<bool> data)
         {
             var result = new List<byte>();
             var currentCode = new List<bool>();
-            byte currentSymbol;
+            byte? currentSymbol;
 
             for (int i = 0; i < data.Count; i++)
             {
                 currentCode.Add(data[i]);
-                foreach(var sub in substitutions)
+
+                currentSymbol = findSubstitution(substitutions, currentCode);
+                if (currentSymbol != null)
                 {
-                    if (sub.Value.SequenceEqual(currentCode))
-                    {
-                        currentSymbol = sub.Key;
-                        result.Add(currentSymbol);
-                        currentCode.Clear();
-                    }
+                    result.Add((byte)currentSymbol);
+                    currentCode.Clear();
                 }
             }
 
             return result;
         }
+
+        #region Decompress
+        private static byte? findSubstitution(Dictionary<byte, List<bool>> substitutions, List<bool> currentCode)
+        {
+            byte? currentSymbol = null;
+
+            foreach (var sub in substitutions)
+            {
+                if (sub.Value.SequenceEqual(currentCode))
+                {
+                    currentSymbol = sub.Key;
+                    break;
+                }
+            }
+
+            return currentSymbol;
+        }
+        #endregion
+
+        #region Output
+        public static void PrintWeights(Dictionary<byte, int> weights)
+        {
+            var orderedWeights = weights.OrderBy(w => w.Value);
+            foreach (var elem in orderedWeights)
+            {
+                Console.WriteLine(string.Format("{0, 6} = {1,6}", elem.Key, elem.Value));
+            }
+        }
+
+        public static void PrintSubstitutions(Dictionary<byte, List<bool>> substitutions)
+        {
+            Console.WriteLine("__________");
+
+            // Ordered by code lenght.
+            var orderedSubstitutions = substitutions.OrderBy(e => e.Value.Count);
+            foreach (var elem in orderedSubstitutions)
+            {
+                Console.Write($"{elem.Key} ");
+                elem.Value.ForEach(b => { Console.Write(b ? 1 : 0); });
+                Console.Write("\n");
+            }
+
+            Console.WriteLine("__________");
+        }
+        #endregion
     }
 }
