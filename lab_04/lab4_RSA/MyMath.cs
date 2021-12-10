@@ -34,10 +34,8 @@
         /// (a * t) mod n == 1
         public static int Inverse(int a, int n)
         {
-            int t = 0;
-            int r = n; // остаток от деления
-            int newt = 1;
-            int newr = a;
+            int t = 0, r = n; 
+            int newt = 1, newr = a;
 
             while (newr != 0)
             {
@@ -52,7 +50,7 @@
             }
 
             if (r > 1)
-                return -1; // a is not invertible
+                return -1;
             if (t < 0)
                 t = t + n;
 
@@ -60,3 +58,8 @@
         }
     }
 }
+// Переход к расширенному алг. Евклида
+// de mod fi = 1
+// de = fi * x + 1
+// de - fi * x = 1
+// == ax + by = нод
